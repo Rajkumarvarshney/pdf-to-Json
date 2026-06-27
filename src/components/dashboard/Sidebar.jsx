@@ -16,13 +16,13 @@ const navItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
-export default function Sidebar({ activeSection, setActiveSection, onBack, stats }) {
+export default function Sidebar({ activeSection, setActiveSection, onBack, stats, onClose, className = '' }) {
   return (
     <motion.aside
       initial={{ x: -280 }}
       animate={{ x: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-      className="w-64 flex-shrink-0 h-screen flex flex-col"
+      className={`w-64 flex-shrink-0 h-screen flex flex-col ${className}`}
       style={{
         background: 'rgba(10,10,20,0.95)',
         borderRight: '1px solid rgba(255,255,255,0.06)',
@@ -31,14 +31,24 @@ export default function Sidebar({ activeSection, setActiveSection, onBack, stats
     >
       {/* Logo */}
       <div className="p-5 border-b border-white/5">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-            <FileJson size={16} className="text-white" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <FileJson size={16} className="text-white" />
+            </div>
+            <div>
+              <span className="text-white font-bold text-sm tracking-tight">DocParse <span className="text-indigo-400">AI</span></span>
+              <div className="text-gray-600 text-xs">Document Intelligence</div>
+            </div>
           </div>
-          <div>
-            <span className="text-white font-bold text-sm tracking-tight">DocParse <span className="text-indigo-400">AI</span></span>
-            <div className="text-gray-600 text-xs">Document Intelligence</div>
-          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="md:hidden text-gray-500 hover:text-white transition-colors"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {/* Back to landing */}

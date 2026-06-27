@@ -12,9 +12,9 @@ import SettingsSection from '../components/dashboard/SettingsSection'
 import VideoUploadSection from '../components/dashboard/VideoUploadSection'
 import VideoResultsViewer from '../components/dashboard/VideoResultsViewer'
 import { mockStats } from '../data/mockData'
-import { Bell, Search, Command } from 'lucide-react'
+import { Bell, Search, Command, Menu, X } from 'lucide-react'
 
-function TopBar({ activeSection }) {
+function TopBar({ activeSection, onMenuClick }) {
   const titles = {
     upload: 'Upload Document',
     video: 'Video → JSON',
@@ -32,6 +32,12 @@ function TopBar({ activeSection }) {
       style={{ background: 'rgba(10,10,20,0.6)', backdropFilter: 'blur(10px)' }}
     >
       <div className="flex items-center gap-2 text-sm text-gray-400">
+        <button
+          onClick={onMenuClick}
+          className="md:hidden text-gray-400 hover:text-white p-1 rounded-lg mr-1 transition-colors"
+        >
+          <Menu size={18} />
+        </button>
         <span>Dashboard</span>
         <span className="text-gray-700">/</span>
         <span className="text-white">{titles[activeSection]}</span>
@@ -61,15 +67,14 @@ export default function Dashboard({ onBack }) {
   const [activeSection, setActiveSection] = useState('upload')
   const [docData, setDocData] = useState(null)
   const [videoData, setVideoData] = useState(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleDocumentReady = (data) => {
-    // data is the full object from UploadSection: { name, fullText, schema, extractedData, ragChunks, ... }
     if (data) setDocData(data)
     setActiveSection('viewer')
   }
 
   const handleViewDocument = (doc) => {
-    // doc from the Documents list — wraps as minimal docData for mock docs
     setDocData(doc)
     setActiveSection('viewer')
   }
@@ -112,7 +117,7 @@ export default function Dashboard({ onBack }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#0a0a0f' }}>
-      {/* Sidebar */}
+      {/* Desktop Sidebar (visible on md and up) */}
       <Sidebar
         activeSection={['viewer', 'video-results'].includes(activeSection)
           ? (activeSection === 'video-results' ? 'video' : 'documents')
@@ -124,15 +129,51 @@ export default function Dashboard({ onBack }) {
         }}
         onBack={onBack}
         stats={mockStats}
+        className="hidden md:flex"
       />
+
+      {/* Mobile Sidebar drawer overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 z-40 md:hidden"
+            />
+            {/* Sidebar drawer content */}
+            <Sidebar
+              activeSection={['viewer', 'video-results'].includes(activeSection)
+                ? (activeSection === 'video-results' ? 'video' : 'documents')
+                : activeSection}
+              setActiveSection={(s) => {
+                setActiveSection(s)
+                setIsMobileMenuOpen(false) // auto close drawer on link click
+                if (s !== 'documents' && s !== 'upload') setDocData(null)
+                if (s !== 'video') setVideoData(null)
+              }}
+              onBack={onBack}
+              stats={mockStats}
+              onClose={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-y-0 left-0 z-50 md:hidden shadow-2xl"
+            />
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar activeSection={
-          activeSection === 'viewer' ? 'documents'
-          : activeSection === 'video-results' ? 'video'
-          : activeSection
-        } />
+        <TopBar
+          activeSection={
+            activeSection === 'viewer' ? 'documents'
+            : activeSection === 'video-results' ? 'video'
+            : activeSection
+          }
+          onMenuClick={() => setIsMobileMenuOpen(true)}
+        />
 
         <main className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">

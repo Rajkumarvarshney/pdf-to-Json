@@ -235,7 +235,7 @@ export default function UploadSection({ onDocumentReady }) {
 
       {/* Mode Selector */}
       {uploadState === 'idle' && (
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <button
             id="mode-btn-general"
             onClick={() => setParseMode('general')}

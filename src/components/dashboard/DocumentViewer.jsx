@@ -666,14 +666,14 @@ export default function DocumentViewer({ docData }) {
       </div>
 
       {/* Split view */}
-      <div className="flex gap-4 flex-1 min-h-0">
+      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
         {/* Left: PDF text preview */}
-        <div className="w-2/5 flex-shrink-0 glass-card rounded-xl overflow-hidden flex flex-col min-h-0">
+        <div className="w-full lg:w-2/5 lg:flex-shrink-0 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[350px] lg:h-full">
           <PDFPreview docData={docData} />
         </div>
 
         {/* Right: Tabs */}
-        <div className="flex-1 glass-card rounded-xl overflow-hidden flex flex-col min-h-0">
+        <div className="flex-1 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[500px] lg:h-full">
           <div className="flex border-b border-white/5 overflow-x-auto flex-shrink-0">
             {tabs.map(tab => (
               <TabButton key={tab.id} id={tab.id} label={tab.label} icon={tab.icon}
