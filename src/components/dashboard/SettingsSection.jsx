@@ -129,7 +129,7 @@ export default function SettingsSection() {
               className="bg-white/5 border border-white/8 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
             >
               <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
-              <option value="llama3-8b-8192">llama3-8b-8192</option>
+              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
               <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
             </select>
           </SettingRow>

@@ -3,7 +3,9 @@
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 function getModel() {
-  return localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile'
+  const m = localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile'
+  if (m === 'llama3-8b-8192') return 'llama-3.1-8b-instant'
+  return m
 }
 
 function getApiKey() {
