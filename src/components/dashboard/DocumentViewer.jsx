@@ -106,7 +106,7 @@ const SchemaTab = ({ docData }) => {
         </div>
         <CopyButton text={schema} />
       </div>
-      <div className="flex-1 overflow-auto code-block rounded-none rounded-b-xl">
+      <div className="flex-1 min-h-0 flex flex-col code-block rounded-none rounded-b-xl">
         <JsonView data={schema} />
       </div>
     </div>
@@ -145,7 +145,7 @@ const JSONTab = ({ docData }) => {
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-auto code-block rounded-none rounded-b-xl">
+      <div className="flex-1 min-h-0 flex flex-col code-block rounded-none rounded-b-xl">
         <JsonView data={data} />
       </div>
     </div>
@@ -688,7 +688,7 @@ export default function DocumentViewer({ docData }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
-                className="h-full"
+                className="h-full flex flex-col min-h-0"
               >
                 {renderTab()}
               </motion.div>
