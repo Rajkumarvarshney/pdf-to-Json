@@ -2,7 +2,9 @@
 // Uses Groq's free OpenAI-compatible API to analyze PDFs
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL = 'llama-3.3-70b-versatile' // Free, fast, powerful
+function getModel() {
+  return localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile'
+}
 
 function getApiKey() {
   // Check env first, then localStorage (for runtime key entry)
@@ -37,7 +39,7 @@ async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 } = {}, 
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: getModel(),
         messages,
         temperature,
         max_tokens: maxTokens,

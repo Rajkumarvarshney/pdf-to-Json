@@ -42,8 +42,12 @@ const Section = ({ title, icon: Icon, children }) => (
 export default function SettingsSection() {
   const [apiKeyVisible, setApiKeyVisible] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [model, setModel] = useState(localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile')
+  const [apiKey, setApiKey] = useState(localStorage.getItem('groq_api_key') || '')
 
   const handleSave = () => {
+    localStorage.setItem('groq_model', model)
+    localStorage.setItem('groq_api_key', apiKey)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -102,7 +106,9 @@ export default function SettingsSection() {
                 <input
                   id="setting-api-key"
                   type={apiKeyVisible ? 'text' : 'password'}
-                  defaultValue="gsk_•••••••••••••••••••••••••••••"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="gsk_..."
                   className="bg-white/5 border border-white/8 rounded-lg pl-3 pr-10 py-2 text-white text-sm w-64 focus:outline-none focus:border-indigo-500 font-mono"
                 />
                 <button
@@ -118,11 +124,13 @@ export default function SettingsSection() {
           <SettingRow label="Model" description="Groq model for extraction">
             <select
               id="setting-model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
               className="bg-white/5 border border-white/8 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
             >
-              <option>llama-3.3-70b-versatile</option>
-              <option>llama3-8b-8192</option>
-              <option>mixtral-8x7b-32768</option>
+              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+              <option value="llama3-8b-8192">llama3-8b-8192</option>
+              <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
             </select>
           </SettingRow>
           <SettingRow label="Embedding Model" description="Model for RAG embeddings">
