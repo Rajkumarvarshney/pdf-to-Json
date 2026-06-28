@@ -147,7 +147,7 @@ export default function DocChat({
       }
 
       // We pass the full history (system prompt + conversion turns) to maintain memory
-      const response = await callGroq([systemPrompt, ...updatedHistory], { temperature: 0.2 })
+      const response = await callGroq([systemPrompt, ...updatedHistory], { temperature: 0.2, jsonMode: false })
       
       const assistantMessageText = response?.choices?.[0]?.message?.content || 
                                    (typeof response === 'object' && response.content) || 
