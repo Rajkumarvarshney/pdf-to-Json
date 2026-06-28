@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, Code2, FileJson, Table2, Network,
   Download, Copy, CheckCircle2, RefreshCw, Tag, BarChart3,
-  Database, Search, Brain, Image as ImageIcon, Award, Eye, EyeOff
+  Database, Search, Brain, Image as ImageIcon, Award, Eye, EyeOff, AlertCircle
 } from 'lucide-react'
 
 // ─── Syntax-highlighted JSON ─────────────────────────────────────────────────
@@ -664,6 +664,32 @@ export default function DocumentViewer({ docData }) {
           <RefreshCw size={14} /> Regenerate
         </button>
       </div>
+ 
+      {/* Failure Manifest Warning Banner */}
+      {docData?.failedPages && docData.failedPages.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex-shrink-0 flex items-start gap-3 p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-xs"
+        >
+          <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 text-red-200">
+            <span className="font-bold text-red-400">Partial Extraction Alert: </span>
+            The extraction completed, but {docData.failedPages.length} pages were skipped due to API rate limits or processing errors:
+            <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-16 overflow-y-auto pr-2">
+              {docData.failedPages.map((fp, i) => (
+                <span
+                  key={i}
+                  title={fp.error}
+                  className="bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded text-[10px] text-red-300 font-mono"
+                >
+                  Page {fp.pageNum}
+                </span>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Split view */}
       <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">

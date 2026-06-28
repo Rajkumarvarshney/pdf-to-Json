@@ -135,25 +135,13 @@ export default function UploadSection({ onDocumentReady }) {
     } catch (err) {
       setCurrentStep(-1)
       setUploadState('error')
-      if (err.message === 'NO_API_KEY') {
-        setErrorMsg('Groq API key not set.')
-        setShowApiKeyModal(true)
-      } else {
-        setErrorMsg(err.message || 'An unexpected error occurred.')
-      }
+      setErrorMsg(err.message || 'An unexpected error occurred.')
     }
   }
 
   const onDrop = (acceptedFiles) => {
     const file = acceptedFiles[0]
     if (!file) return
-
-    if (!hasApiKey() && !apiKeyReady) {
-      setShowApiKeyModal(true)
-      setUploadedFile(file) // remember the file to process after key is set
-      return
-    }
-
     processRealPDF(file)
   }
 
@@ -193,44 +181,34 @@ export default function UploadSection({ onDocumentReady }) {
       </div>
 
       {/* API Key status banner */}
-      {!apiKeyReady && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-4 mb-6 rounded-xl border border-yellow-500/20 bg-yellow-500/5 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <Key size={16} className="text-yellow-400" />
-            <div>
-              <p className="text-yellow-300 text-sm font-medium">Groq API key not configured</p>
-              <p className="text-yellow-700 text-xs">Required for real PDF parsing</p>
-            </div>
-          </div>
-          <button
-            id="set-api-key-btn"
-            onClick={() => setShowApiKeyModal(true)}
-            className="btn-primary text-xs py-2 flex items-center gap-1.5"
-          >
-            <Key size={12} /> Add API Key
-          </button>
-        </motion.div>
-      )}
-
-      {apiKeyReady && uploadState === 'idle' && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 text-xs text-green-400 mb-4"
-        >
-          <CheckCircle2 size={12} />
-          Groq AI ready — upload any PDF to get real extraction
-          <button
-            onClick={() => { setApiKeyReady(false); localStorage.removeItem('groq_api_key') }}
-            className="text-gray-600 hover:text-gray-400 ml-2 underline"
-          >
-            Change key
-          </button>
-        </motion.div>
+      {uploadState === 'idle' && (
+        <div className="mb-4">
+          {apiKeyReady ? (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 text-xs text-green-400"
+            >
+              <CheckCircle2 size={12} />
+              Groq AI ready — Client API Key configured
+              <button
+                onClick={() => { setApiKeyReady(false); localStorage.removeItem('groq_api_key') }}
+                className="text-gray-600 hover:text-gray-400 ml-2 underline"
+              >
+                Change key
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 text-xs text-indigo-400"
+            >
+              <CheckCircle2 size={12} />
+              Using secure Server API Proxy — PDF parsing active. You can add a custom key in Settings.
+            </motion.div>
+          )}
+        </div>
       )}
 
       {/* Mode Selector */}

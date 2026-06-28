@@ -84,11 +84,6 @@ export default function VideoUploadSection({ onVideoReady }) {
       setUploadState('error')
       return
     }
-    if (!hasApiKey() && !apiKeyReady) {
-      setVideoFile(file)
-      setShowApiKeyModal(true)
-      return
-    }
     setVideoFile(file)
     setErrorMsg('')
     try {
@@ -236,13 +231,34 @@ export default function VideoUploadSection({ onVideoReady }) {
         <p className="text-gray-400">Upload an educational or any video — AI will analyze and extract structured JSON</p>
       </div>
 
-      {!apiKeyReady && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="glass-card p-4 mb-6 rounded-xl border border-yellow-500/20 bg-yellow-500/5 flex items-center justify-between"
-        >
-          <p className="text-yellow-300 text-sm font-medium">Groq API key required</p>
-          <button onClick={() => setShowApiKeyModal(true)} className="btn-primary text-xs py-2">Add Key</button>
-        </motion.div>
+      {uploadState === 'idle' && (
+        <div className="mb-4">
+          {apiKeyReady ? (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 text-xs text-green-400"
+            >
+              <CheckCircle2 size={12} />
+              Groq AI ready — Client API Key configured
+              <button
+                onClick={() => { setApiKeyReady(false); localStorage.removeItem('groq_api_key') }}
+                className="text-gray-600 hover:text-gray-400 ml-2 underline"
+              >
+                Change key
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 text-xs text-indigo-400"
+            >
+              <CheckCircle2 size={12} />
+              Using secure Server API Proxy — Video parsing active. You can add a custom key in Settings.
+            </motion.div>
+          )}
+        </div>
       )}
 
       <AnimatePresence mode="wait">

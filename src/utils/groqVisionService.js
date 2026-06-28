@@ -25,15 +25,19 @@ function dataUrlToBase64(dataUrl) {
 
 async function callGroqVision(messages, maxTokens = 4096, retriesLeft = 3) {
   const apiKey = getApiKey()
-  if (!apiKey) throw new Error('NO_API_KEY')
+  const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/completion'
+
+  const headers = {
+    'Content-Type': 'application/json',
+  }
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model: VISION_MODEL,
         messages,
@@ -49,13 +53,13 @@ async function callGroqVision(messages, maxTokens = 4096, retriesLeft = 3) {
       // Catch rate limits (429 status code or message indicating rate limit)
       if (response.status === 429 || errorMsg.toLowerCase().includes('rate limit')) {
         if (retriesLeft > 0) {
-          // Parse wait time in seconds (e.g., "try again in 19.932s")
-          let waitMs = 6000 // default wait of 6 seconds
+          // Exponential backoff: 2^attempt * 3000ms + random jitter
+          let waitMs = Math.pow(2, 3 - retriesLeft) * 3000 + Math.ceil(Math.random() * 1000)
           const match = errorMsg.match(/try again in ([\d\.]+)\s*s/i)
           if (match && match[1]) {
             waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 2000 // add 2s buffer
           }
-          console.warn(`[Groq Vision API] Rate limit hit. Waiting ${waitMs}ms before retry. Retries left: ${retriesLeft}`)
+          console.warn(`[Groq Vision API] Rate limit hit. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
           await new Promise(resolve => setTimeout(resolve, waitMs))
           return callGroqVision(messages, maxTokens, retriesLeft - 1)
         }
@@ -67,12 +71,12 @@ async function callGroqVision(messages, maxTokens = 4096, retriesLeft = 3) {
     return data.choices?.[0]?.message?.content || ''
   } catch (err) {
     if (retriesLeft > 0 && err.message.toLowerCase().includes('rate limit')) {
-      let waitMs = 12000
+      let waitMs = Math.pow(2, 3 - retriesLeft) * 4000 + Math.ceil(Math.random() * 1000)
       const match = err.message.match(/try again in ([\d\.]+)\s*s/i)
       if (match && match[1]) {
         waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 2000
       }
-      console.warn(`[Groq Vision API] Rate limit error caught. Waiting ${waitMs}ms before retry. Retries left: ${retriesLeft}`)
+      console.warn(`[Groq Vision API] Rate limit error caught. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
       await new Promise(resolve => setTimeout(resolve, waitMs))
       return callGroqVision(messages, maxTokens, retriesLeft - 1)
     }
@@ -82,15 +86,19 @@ async function callGroqVision(messages, maxTokens = 4096, retriesLeft = 3) {
 
 async function callGroqText(messages, maxTokens = 8192, retriesLeft = 3) {
   const apiKey = getApiKey()
-  if (!apiKey) throw new Error('NO_API_KEY')
+  const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/completion'
+
+  const headers = {
+    'Content-Type': 'application/json',
+  }
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model: TEXT_MODEL,
         messages,
@@ -106,12 +114,12 @@ async function callGroqText(messages, maxTokens = 8192, retriesLeft = 3) {
 
       if (response.status === 429 || errorMsg.toLowerCase().includes('rate limit')) {
         if (retriesLeft > 0) {
-          let waitMs = 6000
+          let waitMs = Math.pow(2, 3 - retriesLeft) * 3000 + Math.ceil(Math.random() * 1000)
           const match = errorMsg.match(/try again in ([\d\.]+)\s*s/i)
           if (match && match[1]) {
             waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 2000
           }
-          console.warn(`[Groq Text API] Rate limit hit. Waiting ${waitMs}ms before retry. Retries left: ${retriesLeft}`)
+          console.warn(`[Groq Text API] Rate limit hit. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
           await new Promise(resolve => setTimeout(resolve, waitMs))
           return callGroqText(messages, maxTokens, retriesLeft - 1)
         }
@@ -130,12 +138,12 @@ async function callGroqText(messages, maxTokens = 8192, retriesLeft = 3) {
     }
   } catch (err) {
     if (retriesLeft > 0 && err.message.toLowerCase().includes('rate limit')) {
-      let waitMs = 12000
+      let waitMs = Math.pow(2, 3 - retriesLeft) * 4000 + Math.ceil(Math.random() * 1000)
       const match = err.message.match(/try again in ([\d\.]+)\s*s/i)
       if (match && match[1]) {
         waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 2000
       }
-      console.warn(`[Groq Text API] Rate limit error caught. Waiting ${waitMs}ms before retry. Retries left: ${retriesLeft}`)
+      console.warn(`[Groq Text API] Rate limit error caught. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
       await new Promise(resolve => setTimeout(resolve, waitMs))
       return callGroqText(messages, maxTokens, retriesLeft - 1)
     }

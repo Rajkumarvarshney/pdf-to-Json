@@ -31,15 +31,19 @@ export function saveApiKey(key) {
 
 async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 } = {}, retriesLeft = 3) {
   const apiKey = getApiKey()
-  if (!apiKey) throw new Error('NO_API_KEY')
+  const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/completion'
+
+  const headers = {
+    'Content-Type': 'application/json',
+  }
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model: getModel(),
         messages,
@@ -56,12 +60,13 @@ async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 } = {}, 
       // Check for rate limit error
       if (response.status === 429 || errorMsg.toLowerCase().includes('rate limit')) {
         if (retriesLeft > 0) {
-          let waitMs = 6000 // default wait of 6 seconds
+          // Exponential backoff: 2^attempt * 3000ms + random jitter
+          let waitMs = Math.pow(2, 3 - retriesLeft) * 3000 + Math.ceil(Math.random() * 1000)
           const match = errorMsg.match(/try again in ([\d\.]+)\s*s/i)
           if (match && match[1]) {
             waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 2000 // add 2s buffer
           }
-          console.warn(`[Groq API] Rate limit hit. Waiting ${waitMs}ms before retry. Retries left: ${retriesLeft}`)
+          console.warn(`[Groq API] Rate limit hit. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
           await new Promise(resolve => setTimeout(resolve, waitMs))
           return callGroq(messages, { temperature, maxTokens }, retriesLeft - 1)
         }
@@ -82,12 +87,12 @@ async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 } = {}, 
     }
   } catch (err) {
     if (retriesLeft > 0 && err.message.toLowerCase().includes('rate limit')) {
-      let waitMs = 12000
+      let waitMs = Math.pow(2, 3 - retriesLeft) * 4000 + Math.ceil(Math.random() * 1000)
       const match = err.message.match(/try again in ([\d\.]+)\s*s/i)
       if (match && match[1]) {
         waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 2000
       }
-      console.warn(`[Groq API] Rate limit error caught. Waiting ${waitMs}ms before retry. Retries left: ${retriesLeft}`)
+      console.warn(`[Groq API] Rate limit error caught. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
       await new Promise(resolve => setTimeout(resolve, waitMs))
       return callGroq(messages, { temperature, maxTokens }, retriesLeft - 1)
     }
@@ -217,6 +222,7 @@ export async function processDocumentWithGroq(pagesOrText, onProgress) {
   // Step 2: Extract structured data page-by-page in batches of 5 pages
   const BATCH_SIZE = 5
   let extractedData = null
+  const failedPages = []
 
   for (let i = 0; i < pages.length; i += BATCH_SIZE) {
     const batchPages = pages.slice(i, i + BATCH_SIZE)
@@ -225,8 +231,18 @@ export async function processDocumentWithGroq(pagesOrText, onProgress) {
     const batchText = batchPages.map(p => p.text).join('\n\n')
 
     onProgress?.(`Extracting data (pages ${startPage}-${endPage} of ${pages.length})...`)
-    const batchData = await extractStructuredData(batchText, schema, documentType)
-    extractedData = mergeExtractedData(extractedData, batchData)
+    try {
+      const batchData = await extractStructuredData(batchText, schema, documentType)
+      extractedData = mergeExtractedData(extractedData, batchData)
+    } catch (err) {
+      console.error(`Failed to extract data for pages ${startPage}-${endPage}:`, err)
+      for (const bp of batchPages) {
+        failedPages.push({
+          pageNum: bp.pageNum,
+          error: err.message || 'Unknown extraction error'
+        })
+      }
+    }
     
     // Tiny delay to avoid rate limit spikes
     if (i + BATCH_SIZE < pages.length) {
@@ -234,7 +250,12 @@ export async function processDocumentWithGroq(pagesOrText, onProgress) {
     }
   }
 
-  return { documentType, schema, extractedData: extractedData || {} }
+  return {
+    documentType,
+    schema,
+    extractedData: extractedData || {},
+    failedPages
+  }
 }
 
 export const EXAM_SCHEMA = {
@@ -281,6 +302,7 @@ export async function processExamWithGroq(pagesOrText, onProgress) {
 
   const BATCH_SIZE = 5
   let extractedData = null
+  const failedPages = []
 
   for (let i = 0; i < pages.length; i += BATCH_SIZE) {
     const batchPages = pages.slice(i, i + BATCH_SIZE)
@@ -289,8 +311,18 @@ export async function processExamWithGroq(pagesOrText, onProgress) {
     const batchText = batchPages.map(p => p.text).join('\n\n')
 
     onProgress?.(`Extracting questions (pages ${startPage}-${endPage} of ${pages.length})...`)
-    const batchData = await extractExamBatch(batchText)
-    extractedData = mergeExtractedData(extractedData, batchData)
+    try {
+      const batchData = await extractExamBatch(batchText)
+      extractedData = mergeExtractedData(extractedData, batchData)
+    } catch (err) {
+      console.error(`Failed to extract questions for pages ${startPage}-${endPage}:`, err)
+      for (const bp of batchPages) {
+        failedPages.push({
+          pageNum: bp.pageNum,
+          error: err.message || 'Unknown extraction error'
+        })
+      }
+    }
     
     // Tiny delay to avoid rate limit spikes
     if (i + BATCH_SIZE < pages.length) {
@@ -301,7 +333,8 @@ export async function processExamWithGroq(pagesOrText, onProgress) {
   return {
     documentType: 'exam_paper',
     schema: EXAM_SCHEMA,
-    extractedData: extractedData || { subject: 'Unknown', questions: [] }
+    extractedData: extractedData || { subject: 'Unknown', questions: [] },
+    failedPages
   }
 }
 
