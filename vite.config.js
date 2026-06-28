@@ -73,8 +73,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      // Only exclude pdfjs-dist (it's lazy-loaded per upload)
-      exclude: ['pdfjs-dist'],
+      // Exclude heavy/polyfilled dependencies from initial pre-bundling
+      exclude: ['pdfjs-dist', 'mammoth'],
     },
   }
 })

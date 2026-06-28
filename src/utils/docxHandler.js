@@ -1,4 +1,3 @@
-import mammoth from 'mammoth'
 
 /**
  * Parses an HTML table element into a 2D string array.
@@ -33,6 +32,7 @@ function tableToText(parsedTable) {
  */
 export async function extractTextFromDOCX(file) {
   try {
+    const mammoth = await import('mammoth')
     const arrayBuffer = await file.arrayBuffer()
     
     // Convert to HTML (preserves tables and images as inline base64 data URIs)
