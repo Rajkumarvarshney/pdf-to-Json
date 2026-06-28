@@ -6,12 +6,14 @@ import {
   AlertCircle, Key, RefreshCw
 } from 'lucide-react'
 import { extractTextFromPDF, createRAGChunks } from '../../utils/pdfExtractor'
+import { extractTextFromDOCX } from '../../utils/docxHandler'
+import { extractTextFromPPTX } from '../../utils/pptxHandler'
 import { processDocumentWithGroq, processExamWithGroq, hasApiKey } from '../../utils/groqService'
 import ApiKeyModal from '../ui/ApiKeyModal'
 
 // ─── Real processing steps shown during AI pipeline ──────────────────────────
 const STEPS = [
-  { id: 0, label: 'Reading PDF pages...' },
+  { id: 0, label: 'Reading document pages...' },
   { id: 1, label: 'Extracting text & layout...' },
   { id: 2, label: 'Detecting document type...' },
   { id: 3, label: 'Generating JSON Schema with Groq AI...' },
@@ -55,7 +57,7 @@ export default function UploadSection({ onDocumentReady }) {
   const [apiKeyReady, setApiKeyReady] = useState(hasApiKey())
   const [parseMode, setParseMode] = useState('general') // general | exam
 
-  // ─── REAL PDF PROCESSING ────────────────────────────────────────────────────
+  // ─── REAL DOCUMENT PROCESSING ───────────────────────────────────────────────
   const processRealPDF = async (file) => {
     setUploadState('processing')
     setUploadedFile(file)
@@ -69,14 +71,39 @@ export default function UploadSection({ onDocumentReady }) {
     }
 
     try {
-      // Step 0-1: Extract text from PDF
+      // Step 0-1: Extract text based on file format
       advance(0)
       await delay(300)
       advance(1)
-      const { fullText, pages, pageCount, images } = await extractTextFromPDF(file)
+      
+      const fileExtension = file.name.split('.').pop().toLowerCase()
+      let extractedDataResult
+
+      if (fileExtension === 'docx') {
+        extractedDataResult = await extractTextFromDOCX(file)
+      } else if (fileExtension === 'pptx') {
+        extractedDataResult = await extractTextFromPPTX(file)
+      } else if (fileExtension === 'pdf') {
+        extractedDataResult = await extractTextFromPDF(file)
+      } else {
+        throw new Error('Unsupported file format. Please upload PDF, DOCX, or PPTX.')
+      }
+
+      const { fullText, pages, pageCount, images } = {
+        fullText: extractedDataResult.fullText,
+        pages: extractedDataResult.pages,
+        pageCount: extractedDataResult.pageCount || extractedDataResult.pages.length,
+        images: extractedDataResult.images || extractedDataResult.pages.flatMap((p) => 
+          (p.imageBase64 || []).map((imgBase64, imgIdx) => ({
+            id: `${p.pageNumber}_img_${imgIdx}`,
+            pageNum: p.pageNumber,
+            dataUrl: imgBase64
+          }))
+        )
+      }
 
       if (!fullText || fullText.trim().length < 20) {
-        throw new Error('Could not extract text from this PDF. It may be a scanned image-only PDF.')
+        throw new Error('Could not extract text from this document. Ensure it contains parseable content.')
       }
 
       // Step 2: Detecting doc type (calls Groq internally)
@@ -95,7 +122,7 @@ export default function UploadSection({ onDocumentReady }) {
           if (msg.includes('Extracting')) advance(4)
         })
       }
-      const { documentType, schema, extractedData } = docResult
+      const { documentType, schema, extractedData, failedPages } = docResult
 
       // Step 5: Chunk for RAG
       advance(5)
@@ -120,6 +147,7 @@ export default function UploadSection({ onDocumentReady }) {
         images,
         parseMode,
         documentType,
+        fileType: fileExtension,
         schema: {
           ...schema,
           $schema: 'http://json-schema.org/draft-07/schema#',
@@ -127,6 +155,7 @@ export default function UploadSection({ onDocumentReady }) {
         },
         extractedData,
         ragChunks,
+        failedPages,
         isReal: true,
       }
 
@@ -155,7 +184,11 @@ export default function UploadSection({ onDocumentReady }) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'application/pdf': ['.pdf'] },
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx']
+    },
     multiple: false,
     disabled: uploadState === 'processing',
   })
@@ -274,11 +307,19 @@ export default function UploadSection({ onDocumentReady }) {
                 <p className="text-indigo-400 font-semibold text-lg">Drop it here!</p>
               ) : (
                 <>
-                  <p className="text-white font-semibold text-xl mb-2">Drag & drop your PDF here</p>
-                  <p className="text-gray-500 mb-4">or click to browse your files</p>
+                  <p className="text-white font-semibold text-xl mb-1">Drag & drop your file here</p>
+                  <p className="text-gray-500 mb-4 text-sm">or click to browse your files · PDF, DOCX, or PPTX</p>
+                  
+                  {/* File type badges */}
+                  <div className="flex justify-center gap-2 mb-5">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md">PDF</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-md">DOCX</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-md">PPTX</span>
+                  </div>
+
                   <div className="flex items-center justify-center gap-6 text-xs text-gray-600">
                     <span className="flex items-center gap-1"><CheckCircle2 size={10} className="text-green-500" /> Real AI extraction</span>
-                    <span className="flex items-center gap-1"><CheckCircle2 size={10} className="text-green-500" /> Any PDF type</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 size={10} className="text-green-500" /> Layout aware</span>
                     <span className="flex items-center gap-1"><CheckCircle2 size={10} className="text-green-500" /> Up to 50MB</span>
                   </div>
                 </>

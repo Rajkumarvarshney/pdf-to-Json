@@ -646,6 +646,14 @@ export default function DocumentViewer({ docData }) {
   }
 
   const docType = docData?.documentType?.replace(/_/g, ' ') || 'Document'
+  const fileType = docData?.fileType || docData?.name?.split('.').pop()?.toLowerCase() || 'pdf'
+  
+  const fileTypeBadges = {
+    pdf: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+    docx: 'bg-green-500/10 text-green-400 border border-green-500/20',
+    pptx: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
+  }
+  const badgeStyle = fileTypeBadges[fileType] || fileTypeBadges.pdf
 
   return (
     <div className="flex flex-col h-full gap-4 p-4 overflow-hidden">
@@ -655,6 +663,9 @@ export default function DocumentViewer({ docData }) {
           <h2 className="text-xl font-black text-white truncate max-w-lg">{docData?.name || 'document.pdf'}</h2>
           <div className="flex items-center gap-3 text-sm text-gray-400 mt-1 flex-wrap">
             <span className="status-completed text-xs px-2 py-0.5 rounded-full">✓ Processed by Groq AI</span>
+            <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded font-semibold ${badgeStyle}`}>
+              {fileType}
+            </span>
             <span className="capitalize text-indigo-400 text-xs">{docType}</span>
             {docData?.pageCount && <span>{docData.pageCount} page{docData.pageCount > 1 ? 's' : ''}</span>}
             {docData?.size && <span>{docData.size}</span>}
