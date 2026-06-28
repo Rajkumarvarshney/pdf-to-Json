@@ -29,7 +29,7 @@ export function saveApiKey(key) {
   localStorage.setItem('groq_api_key', key)
 }
 
-async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 } = {}, retriesLeft = 3) {
+export async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 } = {}, retriesLeft = 3) {
   const apiKey = getApiKey()
   const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/completion'
 

@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, Code2, FileJson, Table2, Network,
   Download, Copy, CheckCircle2, RefreshCw, Tag, BarChart3,
-  Database, Search, Brain, Image as ImageIcon, Award, Eye, EyeOff, AlertCircle
+  Database, Search, Brain, Image as ImageIcon, Award, Eye, EyeOff, AlertCircle, MessageSquare
 } from 'lucide-react'
+import DocChat from './DocChat'
 
 // ─── Syntax-highlighted JSON ─────────────────────────────────────────────────
 const JsonView = ({ data }) => {
@@ -619,6 +620,38 @@ const ExtractedImagesTab = ({ docData }) => {
 export default function DocumentViewer({ docData }) {
   const isExam = docData?.parseMode === 'exam' || docData?.documentType === 'exam_paper'
   const [activeTab, setActiveTab] = useState(isExam ? 'exam' : 'json')
+  
+  // DocChat Parent State
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatHistory, setChatHistory] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Keyboard Shortcuts: Cmd/Ctrl + K to toggle chat, Escape to close
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setChatOpen(prev => {
+          if (!prev) setUnreadCount(0)
+          return !prev
+        })
+      }
+      if (e.key === 'Escape' && chatOpen) {
+        setChatOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [chatOpen])
 
   const tabs = [
     ...(isExam ? [
@@ -656,83 +689,133 @@ export default function DocumentViewer({ docData }) {
   const badgeStyle = fileTypeBadges[fileType] || fileTypeBadges.pdf
 
   return (
-    <div className="flex flex-col h-full gap-4 p-4 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-shrink-0">
-        <div>
-          <h2 className="text-xl font-black text-white truncate max-w-lg">{docData?.name || 'document.pdf'}</h2>
-          <div className="flex items-center gap-3 text-sm text-gray-400 mt-1 flex-wrap">
-            <span className="status-completed text-xs px-2 py-0.5 rounded-full">✓ Processed by Groq AI</span>
-            <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded font-semibold ${badgeStyle}`}>
-              {fileType}
-            </span>
-            <span className="capitalize text-indigo-400 text-xs">{docType}</span>
-            {docData?.pageCount && <span>{docData.pageCount} page{docData.pageCount > 1 ? 's' : ''}</span>}
-            {docData?.size && <span>{docData.size}</span>}
-          </div>
-        </div>
-        <button id="btn-regenerate" className="btn-secondary flex items-center gap-2 text-sm py-2">
-          <RefreshCw size={14} /> Regenerate
-        </button>
-      </div>
- 
-      {/* Failure Manifest Warning Banner */}
-      {docData?.failedPages && docData.failedPages.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 flex items-start gap-3 p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-xs"
-        >
-          <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 text-red-200">
-            <span className="font-bold text-red-400">Partial Extraction Alert: </span>
-            The extraction completed, but {docData.failedPages.length} pages were skipped due to API rate limits or processing errors:
-            <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-16 overflow-y-auto pr-2">
-              {docData.failedPages.map((fp, i) => (
-                <span
-                  key={i}
-                  title={fp.error}
-                  className="bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded text-[10px] text-red-300 font-mono"
-                >
-                  Page {fp.pageNum}
-                </span>
-              ))}
+    <div className="relative flex h-full w-full overflow-hidden">
+      <motion.div
+        animate={{ marginRight: chatOpen && !isMobile ? '376px' : '0px' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="flex flex-col h-full w-full gap-4 p-4 overflow-hidden"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between flex-shrink-0">
+          <div>
+            <h2 className="text-xl font-black text-white truncate max-w-lg">{docData?.name || 'document.pdf'}</h2>
+            <div className="flex items-center gap-3 text-sm text-gray-400 mt-1 flex-wrap">
+              <span className="status-completed text-xs px-2 py-0.5 rounded-full">✓ Processed by Groq AI</span>
+              <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded font-semibold ${badgeStyle}`}>
+                {fileType}
+              </span>
+              <span className="capitalize text-indigo-400 text-xs">{docType}</span>
+              {docData?.pageCount && <span>{docData.pageCount} page{docData.pageCount > 1 ? 's' : ''}</span>}
+              {docData?.size && <span>{docData.size}</span>}
             </div>
           </div>
-        </motion.div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setChatOpen(prev => {
+                  if (!prev) setUnreadCount(0)
+                  return !prev
+                })
+              }}
+              className={`btn-secondary flex items-center gap-2 text-sm py-2 px-4 transition-all ${
+                chatOpen ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400 font-bold' : ''
+              }`}
+            >
+              <MessageSquare size={14} className={chatOpen ? 'text-indigo-400' : 'text-gray-400'} />
+              <span>Ask your doc</span>
+              {unreadCount > 0 && (
+                <span className="bg-indigo-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            <button id="btn-regenerate" className="btn-secondary flex items-center gap-2 text-sm py-2">
+              <RefreshCw size={14} /> Regenerate
+            </button>
+          </div>
+        </div>
+   
+        {/* Failure Manifest Warning Banner */}
+        {docData?.failedPages && docData.failedPages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-shrink-0 flex items-start gap-3 p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-xs"
+          >
+            <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 text-red-200">
+              <span className="font-bold text-red-400">Partial Extraction Alert: </span>
+              The extraction completed, but {docData.failedPages.length} pages were skipped due to API rate limits or processing errors:
+              <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-16 overflow-y-auto pr-2">
+                {docData.failedPages.map((fp, i) => (
+                  <span
+                    key={i}
+                    title={fp.error}
+                    className="bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded text-[10px] text-red-300 font-mono"
+                  >
+                    Page {fp.pageNum}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+  
+        {/* Split view */}
+        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
+          {/* Left: PDF text preview */}
+          <div className="w-full lg:w-2/5 lg:flex-shrink-0 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[350px] lg:h-full">
+            <PDFPreview docData={docData} />
+          </div>
+  
+          {/* Right: Tabs */}
+          <div className="flex-1 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[500px] lg:h-full">
+            <div className="flex border-b border-white/5 overflow-x-auto flex-shrink-0">
+              {tabs.map(tab => (
+                <TabButton key={tab.id} id={tab.id} label={tab.label} icon={tab.icon}
+                  isActive={activeTab === tab.id} onClick={setActiveTab} />
+              ))}
+            </div>
+            <div className="flex-1 overflow-hidden min-h-0">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col min-h-0"
+                >
+                  {renderTab()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Mobile Backdrop Overlay */}
+      {chatOpen && isMobile && (
+        <div
+          onClick={() => setChatOpen(false)}
+          className="fixed inset-0 bg-black/60 z-45 md:hidden"
+        />
       )}
 
-      {/* Split view */}
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
-        {/* Left: PDF text preview */}
-        <div className="w-full lg:w-2/5 lg:flex-shrink-0 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[350px] lg:h-full">
-          <PDFPreview docData={docData} />
-        </div>
-
-        {/* Right: Tabs */}
-        <div className="flex-1 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[500px] lg:h-full">
-          <div className="flex border-b border-white/5 overflow-x-auto flex-shrink-0">
-            {tabs.map(tab => (
-              <TabButton key={tab.id} id={tab.id} label={tab.label} icon={tab.icon}
-                isActive={activeTab === tab.id} onClick={setActiveTab} />
-            ))}
-          </div>
-          <div className="flex-1 overflow-hidden min-h-0">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2 }}
-                className="h-full flex flex-col min-h-0"
-              >
-                {renderTab()}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
+      {/* DocChat Sidebar */}
+      <DocChat
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        extractedJson={docData?.extractedData}
+        metadata={{
+          fileType: fileType,
+          fileName: docData?.name || 'document',
+          totalPages: docData?.pageCount || 0
+        }}
+        history={chatHistory}
+        onHistory={setChatHistory}
+        onUnread={setUnreadCount}
+      />
     </div>
   )
 }
