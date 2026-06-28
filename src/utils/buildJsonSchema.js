@@ -9,7 +9,7 @@ function compileProperties(fieldsList) {
     if (!field.key || field.key.trim() === '') continue
 
     // Resolve JSON Schema types (date becomes string with format date)
-    const fieldSchema = {
+    let fieldSchema = {
       type: field.type === 'date' ? 'string' : field.type
     }
     if (field.type === 'date') {
