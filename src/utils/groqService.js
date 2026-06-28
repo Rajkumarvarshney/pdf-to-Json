@@ -29,7 +29,7 @@ export function saveApiKey(key) {
   localStorage.setItem('groq_api_key', key)
 }
 
-export async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 } = {}, retriesLeft = 3) {
+export async function callGroq(messages, { temperature = 0.1, maxTokens = 4096, jsonMode = true } = {}, retriesLeft = 3) {
   const apiKey = getApiKey()
   const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/completion'
 
@@ -41,16 +41,20 @@ export async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 }
   }
 
   try {
+    const payload = {
+      model: getModel(),
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+    }
+    if (jsonMode) {
+      payload.response_format = { type: 'json_object' }
+    }
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        model: getModel(),
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-        response_format: { type: 'json_object' },
-      }),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {
@@ -68,7 +72,7 @@ export async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 }
           }
           console.warn(`[Groq API] Rate limit hit. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
           await new Promise(resolve => setTimeout(resolve, waitMs))
-          return callGroq(messages, { temperature, maxTokens }, retriesLeft - 1)
+          return callGroq(messages, { temperature, maxTokens, jsonMode }, retriesLeft - 1)
         }
       }
       throw new Error(errorMsg)
@@ -76,6 +80,10 @@ export async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 }
 
     const data = await response.json()
     const text = data.choices?.[0]?.message?.content || ''
+
+    if (!jsonMode) {
+      return text
+    }
 
     try {
       return JSON.parse(text)
@@ -94,7 +102,7 @@ export async function callGroq(messages, { temperature = 0.1, maxTokens = 4096 }
       }
       console.warn(`[Groq API] Rate limit error caught. Waiting ${waitMs}ms before retry (Exponential Backoff). Retries left: ${retriesLeft}`)
       await new Promise(resolve => setTimeout(resolve, waitMs))
-      return callGroq(messages, { temperature, maxTokens }, retriesLeft - 1)
+      return callGroq(messages, { temperature, maxTokens, jsonMode }, retriesLeft - 1)
     }
     throw err
   }
@@ -177,21 +185,70 @@ ${truncated}`,
 }
 
 /**
+ * Helper to flatten tree fields for prompt instruction hints
+ */
+function flattenFields(fieldsList, prefix = '') {
+  let list = []
+  for (const f of fieldsList) {
+    const fullKey = prefix ? `${prefix}.${f.key}` : f.key
+    list.push({
+      key: fullKey,
+      label: f.label,
+      description: f.description,
+      example: f.example
+    })
+    if (f.children && f.children.length > 0) {
+      list = list.concat(flattenFields(f.children, fullKey))
+    }
+  }
+  return list
+}
+
+/**
  * Step 2: Extract structured JSON data from the document text using the generated schema
  */
-export async function extractStructuredData(fullText, schema, documentType) {
+export async function extractStructuredData(fullText, schema, documentType, isCustomSchema = false, fieldsTree = null) {
   // Allow up to 40,000 characters (covers 5 full pages easily) without truncating
   const truncated = fullText.slice(0, 40000)
   const schemaStr = JSON.stringify(schema, null, 2)
 
-  const result = await callGroq([
-    {
-      role: 'system',
-      content: `You are a precise data extraction engine. Extract data from documents into structured JSON. Return ONLY valid JSON, no extra text.`,
-    },
-    {
-      role: 'user',
-      content: `Extract ALL data from this ${documentType} into structured JSON.
+  let messages = []
+  if (isCustomSchema) {
+    const flatFields = fieldsTree ? flattenFields(fieldsTree) : []
+    const fieldHints = flatFields.map(f => {
+      let hint = `- ${f.key}: ${f.description || f.label}`
+      if (f.example) {
+        hint += ` (example: ${f.example})`
+      }
+      return hint
+    }).join('\n')
+
+    messages = [
+      {
+        role: 'system',
+        content: `Extract data from the following document and return ONLY a valid JSON object that strictly conforms to this schema:
+
+${schemaStr}
+
+Field extraction hints:
+${fieldHints}
+
+Return ONLY the JSON object. No explanation, no markdown fences.`
+      },
+      {
+        role: 'user',
+        content: `Document text:\n${truncated}`
+      }
+    ]
+  } else {
+    messages = [
+      {
+        role: 'system',
+        content: `You are a precise data extraction engine. Extract data from documents into structured JSON. Return ONLY valid JSON, no extra text.`,
+      },
+      {
+        role: 'user',
+        content: `Extract ALL data from this ${documentType} into structured JSON.
 
 Follow this JSON Schema exactly:
 ${schemaStr}
@@ -200,24 +257,33 @@ Return a single JSON object with all fields populated from the document. Use nul
 
 Document text:
 ${truncated}`,
-    },
-  ])
+      }
+    ]
+  }
 
+  const result = await callGroq(messages)
   return result
 }
 
 /**
  * Combined: run both steps with progress callbacks and support multi-page batch parsing.
  */
-export async function processDocumentWithGroq(pagesOrText, onProgress) {
+export async function processDocumentWithGroq(pagesOrText, onProgress, customSchema = null, customDocType = null, fieldsTree = null) {
   const pages = Array.isArray(pagesOrText)
     ? pagesOrText
     : [{ pageNum: 1, text: pagesOrText }]
 
-  // Step 1: Detect type and generate schema using the first 3 pages
-  onProgress?.('Detecting document type...')
-  const sampleText = pages.slice(0, 3).map(p => p.text).join('\n\n')
-  const { documentType, schema } = await generateSchema(sampleText)
+  let documentType = customDocType || 'document'
+  let schema = customSchema
+
+  // Step 1: Detect type and generate schema using the first 3 pages (if not custom schema mode)
+  if (!schema) {
+    onProgress?.('Detecting document type...')
+    const sampleText = pages.slice(0, 3).map(p => p.text).join('\n\n')
+    const generated = await generateSchema(sampleText)
+    documentType = generated.documentType
+    schema = generated.schema
+  }
 
   // Step 2: Extract structured data page-by-page in batches of 5 pages
   const BATCH_SIZE = 5
@@ -232,7 +298,13 @@ export async function processDocumentWithGroq(pagesOrText, onProgress) {
 
     onProgress?.(`Extracting data (pages ${startPage}-${endPage} of ${pages.length})...`)
     try {
-      const batchData = await extractStructuredData(batchText, schema, documentType)
+      const batchData = await extractStructuredData(
+        batchText, 
+        schema, 
+        documentType, 
+        !!customSchema, 
+        fieldsTree
+      )
       extractedData = mergeExtractedData(extractedData, batchData)
     } catch (err) {
       console.error(`Failed to extract data for pages ${startPage}-${endPage}:`, err)

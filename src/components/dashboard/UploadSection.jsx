@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDropzone } from 'react-dropzone'
 import {
@@ -10,6 +10,8 @@ import { extractTextFromDOCX } from '../../utils/docxHandler'
 import { extractTextFromPPTX } from '../../utils/pptxHandler'
 import { processDocumentWithGroq, processExamWithGroq, hasApiKey } from '../../utils/groqService'
 import ApiKeyModal from '../ui/ApiKeyModal'
+import SchemaBuilder from './SchemaBuilder'
+import { useSchemaStore } from '../../hooks/useSchemaStore'
 
 // ─── Real processing steps shown during AI pipeline ──────────────────────────
 const STEPS = [
@@ -48,7 +50,7 @@ const ProcessingStep = ({ label, isActive, isComplete, isError }) => (
 )
 
 export default function UploadSection({ onDocumentReady }) {
-  const [uploadState, setUploadState] = useState('idle') // idle | processing | done | error
+  const [uploadState, setUploadState] = useState('idle') // idle | schema_setup | processing | done | error
   const [uploadedFile, setUploadedFile] = useState(null)
   const [currentStep, setCurrentStep] = useState(-1)
   const [completedSteps, setCompletedSteps] = useState([])
@@ -57,8 +59,30 @@ export default function UploadSection({ onDocumentReady }) {
   const [apiKeyReady, setApiKeyReady] = useState(hasApiKey())
   const [parseMode, setParseMode] = useState('general') // general | exam
 
+  // Schema Builder State & Store Configuration
+  const [schemaMode, setSchemaMode] = useState('auto')
+  const {
+    fields,
+    addField,
+    updateField,
+    deleteField,
+    clearFields,
+    loadTemplate,
+    resetToSaved,
+    reorderFields,
+    moveField
+  } = useSchemaStore()
+
+  // On mount, auto-restore custom schema mode if custom fields exist in localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('docparse_custom_schema')
+    if (saved) {
+      setSchemaMode('custom')
+    }
+  }, [])
+
   // ─── REAL DOCUMENT PROCESSING ───────────────────────────────────────────────
-  const processRealPDF = async (file) => {
+  const processRealPDF = async (file, customSchema = null, fieldsTree = null) => {
     setUploadState('processing')
     setUploadedFile(file)
     setCompletedSteps([])
@@ -106,21 +130,31 @@ export default function UploadSection({ onDocumentReady }) {
         throw new Error('Could not extract text from this document. Ensure it contains parseable content.')
       }
 
-      // Step 2: Detecting doc type (calls Groq internally)
-      advance(2)
-      await delay(200)
+      // Step 2: Detecting doc type (calls Groq internally if not custom schema)
+      if (customSchema) {
+        advance(2)
+        await delay(100)
+        advance(3)
+      } else {
+        advance(2)
+        await delay(200)
+        advance(3)
+      }
 
       // Step 3: Generate schema + Step 4: Extract data (single Groq call combo)
-      advance(3)
       let docResult
       if (parseMode === 'exam') {
         docResult = await processExamWithGroq(pages, (msg) => {
           if (msg.includes('Extracting')) advance(4)
         })
       } else {
-        docResult = await processDocumentWithGroq(pages, (msg) => {
-          if (msg.includes('Extracting')) advance(4)
-        })
+        docResult = await processDocumentWithGroq(
+          pages, 
+          (msg) => { if (msg.includes('Extracting')) advance(4) },
+          customSchema,
+          customSchema ? 'custom_document' : 'document',
+          fieldsTree
+        )
       }
       const { documentType, schema, extractedData, failedPages } = docResult
 
@@ -171,7 +205,8 @@ export default function UploadSection({ onDocumentReady }) {
   const onDrop = (acceptedFiles) => {
     const file = acceptedFiles[0]
     if (!file) return
-    processRealPDF(file)
+    setUploadedFile(file)
+    setUploadState('schema_setup')
   }
 
   const handleApiKeySet = () => {
@@ -275,6 +310,53 @@ export default function UploadSection({ onDocumentReady }) {
       )}
 
       <AnimatePresence mode="wait">
+        {/* ── SCHEMA SETUP: Custom Schema Builder ── */}
+        {uploadState === 'schema_setup' && (
+          <motion.div
+            key="schema_setup"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.25 }}
+          >
+            {/* Small File Header Summary before builder */}
+            <div className="flex items-center justify-between p-3.5 bg-[#14141f] border border-white/5 rounded-xl mb-4 text-xs">
+              <div className="flex items-center gap-3">
+                <FileText size={16} className="text-indigo-400" />
+                <span className="font-bold text-white">{uploadedFile?.name}</span>
+                <span className="text-gray-500">({uploadedFile?.size ? `${Math.round(uploadedFile.size / 1024)} KB` : ''})</span>
+              </div>
+              <button 
+                onClick={() => { setUploadState('idle'); setUploadedFile(null) }}
+                className="text-indigo-400 hover:text-indigo-300 font-medium underline"
+              >
+                Upload a different file
+              </button>
+            </div>
+
+            <SchemaBuilder
+              mode={schemaMode}
+              onModeChange={setSchemaMode}
+              fields={fields}
+              addField={addField}
+              updateField={updateField}
+              deleteField={deleteField}
+              clearFields={clearFields}
+              loadTemplate={loadTemplate}
+              resetToSaved={resetToSaved}
+              reorderFields={reorderFields}
+              moveField={moveField}
+              onExtract={(customFields, customSchema) => {
+                processRealPDF(
+                  uploadedFile, 
+                  schemaMode === 'custom' ? customSchema : null, 
+                  schemaMode === 'custom' ? customFields : null
+                )
+              }}
+            />
+          </motion.div>
+        )}
+
         {/* ── IDLE: Drop zone ── */}
         {uploadState === 'idle' && (
           <motion.div
