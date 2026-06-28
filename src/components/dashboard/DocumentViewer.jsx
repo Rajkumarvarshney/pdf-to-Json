@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, Code2, FileJson, Table2, Network,
   Download, Copy, CheckCircle2, RefreshCw, Tag, BarChart3,
-  Database, Search, Brain, Image as ImageIcon, Award, Eye, EyeOff, AlertCircle, MessageSquare
+  Database, Search, Brain, Image as ImageIcon, Award, Eye, EyeOff, AlertCircle, MessageSquare, Zap
 } from 'lucide-react'
 import DocChat from './DocChat'
+import WebhookPanel from './WebhookPanel'
 
 // ─── Syntax-highlighted JSON ─────────────────────────────────────────────────
 const JsonView = ({ data }) => {
@@ -55,17 +56,21 @@ const CopyButton = ({ text }) => {
 }
 
 // ─── Tab button ──────────────────────────────────────────────────────────────
-const TabButton = ({ id, label, icon: Icon, isActive, onClick }) => (
+const TabButton = ({ id, label, icon: Icon, isActive, onClick, showDot }) => (
   <button
     id={`tab-${id}`}
     onClick={() => onClick(id)}
-    className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+    className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap relative ${
       isActive
         ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5'
         : 'border-transparent text-gray-500 hover:text-gray-300'
     }`}
   >
-    <Icon size={14} />{label}
+    <Icon size={14} />
+    <span>{label}</span>
+    {showDot && (
+      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+    )}
   </button>
 )
 
@@ -621,6 +626,12 @@ export default function DocumentViewer({ docData }) {
   const isExam = docData?.parseMode === 'exam' || docData?.documentType === 'exam_paper'
   const [activeTab, setActiveTab] = useState(isExam ? 'exam' : 'json')
   
+  // Webhook subtle pulsing notification indicator
+  const [showWebhookDot, setShowWebhookDot] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !sessionStorage.getItem('docparse_webhook_viewed')
+  })
+
   // DocChat Parent State
   const [chatOpen, setChatOpen] = useState(false)
   const [chatHistory, setChatHistory] = useState([])
@@ -663,7 +674,16 @@ export default function DocumentViewer({ docData }) {
     { id: 'json', label: 'JSON', icon: FileJson },
     { id: 'csv', label: 'CSV Preview', icon: Table2 },
     { id: 'rag', label: 'RAG Chunks', icon: Network },
+    { id: 'webhook', label: '⚡ Export & Send', icon: Zap }
   ]
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId)
+    if (tabId === 'webhook') {
+      setShowWebhookDot(false)
+      sessionStorage.setItem('docparse_webhook_viewed', 'true')
+    }
+  }
 
   const renderTab = () => {
     switch (activeTab) {
@@ -674,6 +694,7 @@ export default function DocumentViewer({ docData }) {
       case 'json': return <JSONTab docData={docData} />
       case 'csv': return <CSVTab docData={docData} />
       case 'rag': return <RAGTab docData={docData} />
+      case 'webhook': return <WebhookPanel extractedJson={docData?.extractedData} metadata={{ fileType, fileName: docData?.name, totalPages: docData?.pageCount }} />
       default: return null
     }
   }
@@ -773,7 +794,7 @@ export default function DocumentViewer({ docData }) {
             <div className="flex border-b border-white/5 overflow-x-auto flex-shrink-0">
               {tabs.map(tab => (
                 <TabButton key={tab.id} id={tab.id} label={tab.label} icon={tab.icon}
-                  isActive={activeTab === tab.id} onClick={setActiveTab} />
+                  isActive={activeTab === tab.id} onClick={handleTabClick} showDot={tab.id === 'webhook' && showWebhookDot} />
               ))}
             </div>
             <div className="flex-1 overflow-hidden min-h-0">
