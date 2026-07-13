@@ -27,7 +27,7 @@ const JsonView = ({ data }) => {
   }
 
   return (
-    <pre className="text-xs leading-relaxed p-4 overflow-auto h-full" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+    <pre className="text-xs leading-relaxed p-4 overflow-y-visible lg:overflow-auto h-auto lg:h-full" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       {lines.map((line, i) => (
         <div
           key={i}
@@ -78,13 +78,13 @@ const TabButton = ({ id, label, icon: Icon, isActive, onClick, showDot }) => (
 const PDFPreview = ({ docData }) => {
   const text = docData?.fullText || docData?.rawText || 'No text extracted.'
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-auto lg:h-full flex flex-col">
       <div className="p-3 border-b border-white/5 flex items-center gap-2 flex-shrink-0">
         <FileText size={14} className="text-gray-400" />
         <span className="text-sm text-gray-400 truncate">{docData?.name || 'document.pdf'}</span>
         <span className="ml-auto text-xs status-completed px-2 py-0.5 rounded-full">✓ {docData?.pageCount || '?'}p</span>
       </div>
-      <div className="flex-1 overflow-auto p-3">
+      <div className="flex-1 overflow-y-visible lg:overflow-auto p-3">
         <div className="bg-white rounded-lg p-5 shadow-xl">
           <pre className="whitespace-pre-wrap font-sans text-gray-800 text-xs leading-5 break-words">
             {text}
@@ -99,7 +99,7 @@ const PDFPreview = ({ docData }) => {
 const SchemaTab = ({ docData }) => {
   const schema = docData?.schema || {}
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-auto lg:h-full flex flex-col">
       <div className="p-3 border-b border-white/5 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <CheckCircle2 size={14} className="text-indigo-400" />
@@ -112,7 +112,7 @@ const SchemaTab = ({ docData }) => {
         </div>
         <CopyButton text={schema} />
       </div>
-      <div className="flex-1 min-h-0 flex flex-col code-block rounded-none rounded-b-xl">
+      <div className="flex-1 lg:min-h-0 flex flex-col code-block rounded-none rounded-b-xl">
         <JsonView data={schema} />
       </div>
     </div>
@@ -134,7 +134,7 @@ const JSONTab = ({ docData }) => {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-auto lg:h-full flex flex-col">
       <div className="p-3 border-b border-white/5 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <CheckCircle2 size={14} className="text-green-400" />
@@ -151,7 +151,7 @@ const JSONTab = ({ docData }) => {
           </button>
         </div>
       </div>
-      <div className="flex-1 min-h-0 flex flex-col code-block rounded-none rounded-b-xl">
+      <div className="flex-1 lg:min-h-0 flex flex-col code-block rounded-none rounded-b-xl">
         <JsonView data={data} />
       </div>
     </div>
@@ -162,7 +162,7 @@ const JSONTab = ({ docData }) => {
 const RawTextTab = ({ docData }) => {
   const text = docData?.fullText || docData?.rawText || ''
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-auto lg:h-full flex flex-col">
       <div className="p-3 border-b border-white/5 flex items-center justify-between flex-shrink-0">
         <span className="text-sm text-gray-300 font-medium">Raw Extracted Text</span>
         <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ const RawTextTab = ({ docData }) => {
           <CopyButton text={text} />
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-y-visible lg:overflow-auto p-4">
         <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono break-words">
           {text || 'No text extracted.'}
         </pre>
@@ -266,7 +266,7 @@ const RAGTab = ({ docData }) => {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-auto lg:h-full flex flex-col">
       <div className="p-3 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -292,7 +292,7 @@ const RAGTab = ({ docData }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-visible lg:overflow-auto p-3 space-y-3">
         {results.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <Search size={24} className="mx-auto mb-2 opacity-30" />
@@ -502,7 +502,7 @@ const ExamQATab = ({ docData }) => {
   const pageImages = docData?.images || []
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-auto lg:h-full flex flex-col">
       <div className="p-4 border-b border-white/5 flex-shrink-0 bg-white/2">
         <div className="flex justify-between items-start flex-wrap gap-3">
           <div>
@@ -536,7 +536,7 @@ const ExamQATab = ({ docData }) => {
         )}
       </div>
 
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-visible lg:overflow-auto p-4 space-y-4">
         {questions.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Brain size={32} className="mx-auto mb-3 opacity-30 animate-pulse text-indigo-400" />
@@ -577,7 +577,7 @@ const ExtractedImagesTab = ({ docData }) => {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-auto lg:h-full flex flex-col">
       <div className="p-3 border-b border-white/5 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <ImageIcon size={14} className="text-indigo-400" />
@@ -587,7 +587,7 @@ const ExtractedImagesTab = ({ docData }) => {
           </span>
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-y-visible lg:overflow-auto p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {images.map((img) => (
             <motion.div
@@ -714,7 +714,7 @@ export default function DocumentViewer({ docData }) {
       <motion.div
         animate={{ marginRight: chatOpen && !isMobile ? '376px' : '0px' }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="flex flex-col h-full w-full gap-4 p-4 overflow-hidden"
+        className="flex flex-col h-full w-full gap-4 p-4 overflow-y-auto lg:overflow-hidden"
       >
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
@@ -783,21 +783,21 @@ export default function DocumentViewer({ docData }) {
         )}
   
         {/* Split view */}
-        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-10 lg:pb-0">
+        <div className="flex flex-col lg:flex-row gap-4 flex-1 lg:min-h-0 lg:overflow-hidden pb-10 lg:pb-0">
           {/* Left: PDF text preview */}
-          <div className="w-full lg:w-2/5 lg:flex-shrink-0 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[350px] lg:h-full">
+          <div className="w-full lg:w-2/5 lg:flex-shrink-0 glass-card rounded-xl overflow-visible lg:overflow-hidden flex flex-col h-auto lg:h-full">
             <PDFPreview docData={docData} />
           </div>
   
           {/* Right: Tabs */}
-          <div className="flex-1 glass-card rounded-xl overflow-hidden flex flex-col min-h-0 h-[500px] lg:h-full">
+          <div className="flex-1 glass-card rounded-xl overflow-visible lg:overflow-hidden flex flex-col h-auto lg:h-full">
             <div className="flex border-b border-white/5 overflow-x-auto flex-shrink-0">
               {tabs.map(tab => (
                 <TabButton key={tab.id} id={tab.id} label={tab.label} icon={tab.icon}
                   isActive={activeTab === tab.id} onClick={handleTabClick} showDot={tab.id === 'webhook' && showWebhookDot} />
               ))}
             </div>
-            <div className="flex-1 overflow-hidden min-h-0">
+            <div className="flex-1 overflow-visible lg:overflow-hidden lg:min-h-0">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -805,7 +805,7 @@ export default function DocumentViewer({ docData }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
-                  className="h-full flex flex-col min-h-0"
+                  className="h-auto lg:h-full flex flex-col lg:min-h-0"
                 >
                   {renderTab()}
                 </motion.div>
