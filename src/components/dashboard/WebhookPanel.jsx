@@ -5,7 +5,6 @@ import {
   Download, AlertTriangle, FileJson, Table2, FileText, Code2, FileCode, 
   Sheet, RefreshCw, X, AlertCircle, Info, CheckCircle2
 } from 'lucide-react'
-import * as XLSX from 'xlsx'
 
 import { useWebhookConfig } from '../../hooks/useWebhookConfig'
 import { 
@@ -94,40 +93,53 @@ export default function WebhookPanel({ extractedJson, metadata }) {
   }
 
   // Pre-calculate export file sizes
-  const getFileSizeEstimate = (format) => {
-    if (!extractedJson) return '~0 KB'
+  const [fileSizes, setFileSizes] = useState({
+    json: '~0 KB',
+    csv: '~0 KB',
+    md: '~0 KB',
+    xml: '~0 KB',
+    yaml: '~0 KB',
+    xlsx: '~32 KB'
+  })
+
+  useEffect(() => {
+    if (!extractedJson) return
+    
     try {
-      let contentStr = ''
-      switch (format) {
-        case 'json':
-          contentStr = JSON.stringify(extractedJson, null, 2)
-          break
-        case 'csv':
-          contentStr = flattenJsonForCsv(extractedJson)
-          break
-        case 'md':
-          contentStr = convertJsonToMarkdown(extractedJson, metadata?.fileName || 'doc', metadata?.fileType || 'pdf')
-          break
-        case 'xml':
-          contentStr = convertJsonToXml(extractedJson)
-          break
-        case 'yaml':
-          contentStr = convertJsonToYaml(extractedJson)
-          break
-        case 'xlsx': {
-          const wb = convertJsonToExcel(extractedJson)
-          const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-          const bytes = excelBuffer.byteLength || 0
-          return `~${(bytes / 1024).toFixed(1)} KB`
-        }
-        default:
-          return '~0 KB'
-      }
-      const bytes = new Blob([contentStr]).size
-      return `~${(bytes / 1024).toFixed(1)} KB`
-    } catch {
-      return '~4 KB'
+      const jsonStr = JSON.stringify(extractedJson, null, 2)
+      const jsonSize = `~${(new Blob([jsonStr]).size / 1024).toFixed(1)} KB`
+
+      const csvStr = flattenJsonForCsv(extractedJson)
+      const csvBytes = new Blob([csvStr]).size
+      const csvSize = `~${(csvBytes / 1024).toFixed(1)} KB`
+
+      const mdStr = convertJsonToMarkdown(extractedJson, metadata?.fileName || 'doc', metadata?.fileType || 'pdf')
+      const mdSize = `~${(new Blob([mdStr]).size / 1024).toFixed(1)} KB`
+
+      const xmlStr = convertJsonToXml(extractedJson)
+      const xmlSize = `~${(new Blob([xmlStr]).size / 1024).toFixed(1)} KB`
+
+      const yamlStr = convertJsonToYaml(extractedJson)
+      const yamlSize = `~${(new Blob([yamlStr]).size / 1024).toFixed(1)} KB`
+
+      // Estimate excel size to avoid loading the massive xlsx library synchronously
+      const xlsxSize = `~${((csvBytes * 1.2 + 8000) / 1024).toFixed(1)} KB`
+
+      setFileSizes({
+        json: jsonSize,
+        csv: csvSize,
+        md: mdSize,
+        xml: xmlSize,
+        yaml: yamlSize,
+        xlsx: xlsxSize
+      })
+    } catch (err) {
+      console.error('Error estimating file sizes:', err)
     }
+  }, [extractedJson, metadata])
+
+  const getFileSizeEstimate = (format) => {
+    return fileSizes[format] || '~0 KB'
   }
 
   // File Download triggers
@@ -135,7 +147,7 @@ export default function WebhookPanel({ extractedJson, metadata }) {
     if (!extractedJson) return
     setDownloadingFormat(format)
     
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         const baseName = metadata?.fileName?.slice(0, metadata.fileName.lastIndexOf('.')) || 'extracted_data'
         let blob, url, a, contentStr
@@ -197,7 +209,10 @@ export default function WebhookPanel({ extractedJson, metadata }) {
             break
             
           case 'xlsx': {
-            const wb = convertJsonToExcel(extractedJson)
+            const [wb, XLSX] = await Promise.all([
+              convertJsonToExcel(extractedJson),
+              import('xlsx')
+            ])
             const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
             blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
             url = URL.createObjectURL(blob)

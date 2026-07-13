@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx'
 
 // Helper to recursively flatten an object into key-value pairs
 function flattenObject(obj, prefix = '', res = {}) {
@@ -293,7 +292,8 @@ export function convertJsonToYaml(data) {
 /**
  * 5. Excel Workbook Formatter (using SheetJS)
  */
-export function convertJsonToExcel(data) {
+export async function convertJsonToExcel(data) {
+  const XLSX = await import('xlsx')
   const wb = XLSX.utils.book_new()
   const summaryData = []
   let hasArraySheets = false
