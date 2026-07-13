@@ -30,7 +30,7 @@ const Navbar = ({ onEnterApp, onScroll }) => {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'py-3 backdrop-blur-xl bg-black/40 border-b border-white/5' : 'py-5'
+        scrolled || menuOpen ? 'py-3 backdrop-blur-xl bg-black/80 border-b border-white/5' : 'py-5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -221,10 +221,10 @@ const HeroSection = ({ onEnterApp }) => {
 }
 
 const DemoPreview = () => (
-  <div className="bg-[#0d0d14] rounded-xl overflow-hidden" style={{ height: '400px' }}>
-    <div className="flex h-full">
+  <div className="bg-[#0d0d14] rounded-xl overflow-hidden h-auto md:h-[400px]">
+    <div className="flex flex-col md:flex-row h-full">
       {/* Left - PDF mock */}
-      <div className="w-1/2 border-r border-white/5 p-4 overflow-hidden">
+      <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-white/5 p-6 md:p-4 overflow-hidden">
         <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-red-500/70" />
           <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
@@ -249,7 +249,7 @@ const DemoPreview = () => (
       </div>
 
       {/* Right - JSON output */}
-      <div className="w-1/2 p-4 overflow-hidden">
+      <div className="w-full md:w-1/2 p-6 md:p-4 overflow-hidden">
         <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
           <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded text-xs">JSON Output</span>
           <span className="ml-auto text-green-400 flex items-center gap-1"><CheckCircle2 size={10} /> Ready</span>
@@ -262,17 +262,17 @@ const DemoPreview = () => (
             {'  '}<span className="json-key">"skills"</span>: <span className="json-bracket">[</span>{'\n'}
             {'    '}<span className="json-string">"React"</span>, <span className="json-string">"TypeScript"</span>,{'\n'}
             {'    '}<span className="json-string">"Node.js"</span>, <span className="json-string">"AWS"</span>{'\n'}
-            {'  '}<span className="json-bracket">]</span>,{'\n'}
-            {'  '}<span className="json-key">"experience"</span>: <span className="json-bracket">[</span><span className="json-bracket">{'{'}</span>{'\n'}
-            {'    '}<span className="json-key">"company"</span>: <span className="json-string">"TechCorp"</span>,{'\n'}
-            {'    '}<span className="json-key">"role"</span>: <span className="json-string">"Sr Engineer"</span>{'\n'}
-            {'  '}<span className="json-bracket">{'}'}</span><span className="json-bracket">]</span>{'\n'}
-            <span className="json-bracket">{'}'}</span>
-          </code>
-        </pre>
-      </div>
+          {'  '}<span className="json-bracket">]</span>,{'\n'}
+          {'  '}<span className="json-key">"experience"</span>: <span className="json-bracket">[</span><span className="json-bracket">{'{'}</span>{'\n'}
+          {'    '}<span className="json-key">"company"</span>: <span className="json-string">"TechCorp"</span>,{'\n'}
+          {'    '}<span className="json-key">"role"</span>: <span className="json-string">"Sr Engineer"</span>{'\n'}
+          {'  '}<span className="json-bracket">{'}'}</span><span className="json-bracket">]</span>{'\n'}
+          <span className="json-bracket">{'}'}</span>
+        </code>
+      </pre>
     </div>
   </div>
+</div>
 )
 
 const features = [
@@ -607,7 +607,7 @@ const CTASection = ({ onEnterApp }) => (
         transition={{ duration: 0.6 }}
         className="gradient-border"
       >
-        <div className="glass-card p-16">
+        <div className="glass-card p-6 sm:p-16">
           <div className="text-6xl mb-6">🚀</div>
           <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
             Start Parsing PDFs <span className="gradient-text">Today</span>

@@ -116,113 +116,121 @@ export default function SchemaFieldRow({
 
       {/* Main Row Content Box */}
       <div 
-        className={`flex items-center gap-3 bg-white/3 border hover:bg-white/5 p-2 rounded-xl mb-1.5 transition-all duration-200 ${
+        className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-white/3 border hover:bg-white/5 p-3 sm:p-2 rounded-xl mb-1.5 transition-all duration-200 ${
           hasError 
             ? 'border-red-500/40 bg-red-500/5' 
             : 'border-white/5'
         }`}
       >
-        {/* Sortable drag handle */}
-        <button 
-          {...attributes} 
-          {...listeners} 
-          className="cursor-grab text-gray-500 hover:text-white p-1"
-        >
-          <GripVertical size={14} />
-        </button>
-
-        {/* Key Input */}
-        <div className="flex-1 min-w-[120px] relative">
-          <input
-            type="text"
-            value={field.key}
-            placeholder="Key name..."
-            onChange={(e) => onUpdate(field.id, { key: e.target.value })}
-            onBlur={handleKeyBlur}
-            onKeyDown={handleInputKeyDown}
-            className={`w-full bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5 text-white text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-              hasError ? 'border-red-500/60 focus:border-red-500' : ''
-            }`}
-          />
-          {hasError && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-red-400" title={isKeyDuplicate ? "Duplicate key at this level" : "Key cannot be empty"}>
-              <AlertCircle size={12} />
-            </span>
-          )}
-        </div>
-
-        {/* Label Input */}
-        <div className="flex-1 min-w-[140px]">
-          <input
-            type="text"
-            value={field.label}
-            placeholder="Display Label..."
-            onChange={(e) => onUpdate(field.id, { label: e.target.value })}
-            onKeyDown={handleInputKeyDown}
-            className="w-full bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500"
-          />
-        </div>
-
-        {/* Type Selector */}
-        <div>
-          <select
-            value={field.type}
-            onChange={(e) => onUpdate(field.id, { type: e.target.value })}
-            className="bg-[#181824] border border-white/8 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
+        {/* Top/Left Row on mobile: Drag handle, Key input */}
+        <div className="flex items-center gap-2 flex-1">
+          {/* Sortable drag handle */}
+          <button 
+            {...attributes} 
+            {...listeners} 
+            className="cursor-grab text-gray-500 hover:text-white p-1 flex-shrink-0"
           >
-            <option value="string">String</option>
-            <option value="number">Number</option>
-            <option value="boolean">Boolean</option>
-            <option value="date">Date</option>
-            <option value="array">List (Array)</option>
-            <option value="object">Group (Object)</option>
-          </select>
-        </div>
-
-        {/* Required Toggle */}
-        <button
-          onClick={() => onUpdate(field.id, { required: !field.required })}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-            field.required 
-              ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 font-bold' 
-              : 'border-white/8 text-gray-500 hover:text-gray-400'
-          }`}
-        >
-          {field.required ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-          <span>Req</span>
-        </button>
-
-        {/* Detail Expand Button */}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={`p-1.5 rounded-lg border transition-colors ${
-            isExpanded 
-              ? 'bg-white/10 border-white/20 text-white' 
-              : 'border-white/5 text-gray-500 hover:text-gray-400'
-          }`}
-        >
-          <Settings size={14} />
-        </button>
-
-        {/* Add nested child field (groups/arrays only, limit level < 3) */}
-        {(field.type === 'object' || field.type === 'array') && (
-          <button
-            onClick={() => onAddChild(field.id)}
-            disabled={level >= 3}
-            title={level >= 3 ? "Nesting limit reached (max 3 levels)" : "Add nested field"}
-            className="p-1.5 rounded-lg border border-white/5 text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
-          >
-            <Plus size={14} />
+            <GripVertical size={14} />
           </button>
-        )}
 
-        {/* Delete Row Button */}
-        <button
-          onClick={handleDeleteClick}
-          className="p-1.5 rounded-lg border border-white/5 text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-colors"
-        >
-          <Trash2 size={14} />
-        </button>
+          {/* Key Input */}
+          <div className="flex-1 min-w-[100px] relative">
+            <input
+              type="text"
+              value={field.key}
+              placeholder="Key name..."
+              onChange={(e) => onUpdate(field.id, { key: e.target.value })}
+              onBlur={handleKeyBlur}
+              onKeyDown={handleInputKeyDown}
+              className={`w-full bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5 text-white text-xs font-mono focus:outline-none focus:border-indigo-500 ${
+                hasError ? 'border-red-500/60 focus:border-red-500' : ''
+              }`}
+            />
+            {hasError && (
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-red-400" title={isKeyDuplicate ? "Duplicate key at this level" : "Key cannot be empty"}>
+                <AlertCircle size={12} />
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom/Right Row: Label, Type, Req, and other controls */}
+        <div className="flex flex-wrap items-center gap-2 sm:contents">
+          {/* Label Input */}
+          <div className="flex-1 min-w-[120px]">
+            <input
+              type="text"
+              value={field.label}
+              placeholder="Display Label..."
+              onChange={(e) => onUpdate(field.id, { label: e.target.value })}
+              onKeyDown={handleInputKeyDown}
+              className="w-full bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          {/* Type Selector */}
+          <div className="flex-shrink-0">
+            <select
+              value={field.type}
+              onChange={(e) => onUpdate(field.id, { type: e.target.value })}
+              className="bg-[#181824] border border-white/8 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
+            >
+              <option value="string">String</option>
+              <option value="number">Number</option>
+              <option value="boolean">Boolean</option>
+              <option value="date">Date</option>
+              <option value="array">List (Array)</option>
+              <option value="object">Group (Object)</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 ml-auto sm:ml-0 flex-shrink-0">
+            {/* Required Toggle */}
+            <button
+              onClick={() => onUpdate(field.id, { required: !field.required })}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                field.required 
+                  ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 font-bold' 
+                  : 'border-white/8 text-gray-500 hover:text-gray-400'
+              }`}
+            >
+              {field.required ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+              <span>Req</span>
+            </button>
+
+            {/* Detail Expand Button */}
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className={`p-1.5 rounded-lg border transition-colors ${
+                isExpanded 
+                  ? 'bg-white/10 border-white/20 text-white' 
+                  : 'border-white/5 text-gray-500 hover:text-gray-400'
+              }`}
+            >
+              <Settings size={14} />
+            </button>
+
+            {/* Add nested child field (groups/arrays only, limit level < 3) */}
+            {(field.type === 'object' || field.type === 'array') && (
+              <button
+                onClick={() => onAddChild(field.id)}
+                disabled={level >= 3}
+                title={level >= 3 ? "Nesting limit reached (max 3 levels)" : "Add nested field"}
+                className="p-1.5 rounded-lg border border-white/5 text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
+              >
+                <Plus size={14} />
+              </button>
+            )}
+
+            {/* Delete Row Button */}
+            <button
+              onClick={handleDeleteClick}
+              className="p-1.5 rounded-lg border border-white/5 text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-colors"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Expanded Inline Detail Settings Panel */}

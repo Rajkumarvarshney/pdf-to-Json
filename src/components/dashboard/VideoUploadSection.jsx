@@ -346,7 +346,7 @@ export default function VideoUploadSection({ onVideoReady }) {
             </div>
 
             {/* Format chips */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { fmt: 'MP4', emoji: '🎬' },
                 { fmt: 'WebM', emoji: '🌐' },
@@ -405,7 +405,7 @@ export default function VideoUploadSection({ onVideoReady }) {
                 <Layers size={15} className="text-purple-400" />
                 <span className="text-white font-semibold text-sm">Frame Extraction Interval</span>
               </div>
-              <div className="grid grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 {INTERVAL_OPTIONS.map((opt) => (
                   <button key={opt.value} onClick={() => setIntervalSecs(opt.value)}
                     className={`p-3 rounded-xl border text-center transition-all ${

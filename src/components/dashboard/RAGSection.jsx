@@ -196,7 +196,7 @@ export default function RAGSection() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="p-6 border-b border-white/5 flex-shrink-0">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black text-white mb-1">RAG Pipeline</h1>
             <p className="text-gray-400 text-sm">Retrieval-Augmented Generation infrastructure for your documents</p>
@@ -215,7 +215,7 @@ export default function RAGSection() {
 
       <div className="flex-1 overflow-y-auto p-6">
         {/* Stats row */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
             { label: 'Chunks Created', value: '5', icon: Layers, color: 'text-indigo-400' },
             { label: 'Embeddings', value: '5', icon: Zap, color: 'text-purple-400' },

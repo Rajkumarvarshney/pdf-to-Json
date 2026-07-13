@@ -217,7 +217,7 @@ function EducationalScriptViewer({ videoData }) {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 flex-shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-3 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-3">
           <BookOpen size={16} className="text-purple-400" />
           <div>
@@ -225,7 +225,7 @@ function EducationalScriptViewer({ videoData }) {
             <span className="text-gray-600 text-xs ml-2">· {allScenes.length} scenes · {topics.length} topics</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
           {/* View toggle */}
           <div className="flex glass-card rounded-lg overflow-hidden p-0.5 gap-0.5">
             {[
@@ -253,11 +253,11 @@ function EducationalScriptViewer({ videoData }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden flex">
+      <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
 
         {/* Left: Topic nav */}
-        <div className="w-56 flex-shrink-0 border-r border-white/5 overflow-y-auto p-3">
-          <div className="text-xs text-gray-600 font-semibold uppercase tracking-wider mb-3 px-2">Topics</div>
+        <div className="w-full md:w-56 flex-shrink-0 border-b md:border-b-0 md:border-r border-white/5 overflow-x-auto md:overflow-y-auto p-3 flex flex-row md:flex-col gap-1.5 md:gap-0 whitespace-nowrap scrollbar-none">
+          <div className="text-xs text-gray-600 font-semibold uppercase tracking-wider mb-3 px-2 hidden md:block">Topics</div>
           {topics.map((topic, ti) => {
             const firstScene = topic.scenes?.[0]
             const title = firstScene?.title
@@ -267,7 +267,7 @@ function EducationalScriptViewer({ videoData }) {
               || `Topic ${ti + 1}`
             return (
               <button key={ti} onClick={() => setActiveTopicIdx(ti)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all mb-1 ${
+                className={`w-auto md:w-full text-left px-3 py-2 rounded-lg text-xs transition-all mb-0 md:mb-1 flex-shrink-0 ${
                   activeTopicIdx === ti
                     ? 'bg-purple-500/15 text-purple-300 border-l-2 border-purple-500'
                     : 'text-gray-500 hover:text-gray-300 hover:bg-white/4'
@@ -351,13 +351,13 @@ function FrameViewer({ videoData }) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 flex-shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-3 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Video size={16} className="text-indigo-400" />
           <span className="text-white font-semibold text-sm">{file?.name}</span>
           <span className="text-gray-600 text-sm">· {frames.length} frames</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
           <div className="flex glass-card rounded-lg overflow-hidden p-0.5 gap-0.5">
             {[{ id: 'split', label: 'Split' }, { id: 'grid', label: 'Grid' }, { id: 'raw', label: 'JSON' }].map(({ id, label }) => (
               <button key={id} onClick={() => setViewMode(id)}
@@ -395,8 +395,8 @@ function FrameViewer({ videoData }) {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {viewMode === 'split' && (
-          <div className="h-full flex">
-            <div className="w-1/2 border-r border-white/5 p-4 flex flex-col gap-3">
+          <div className="h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+            <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-white/5 p-4 flex flex-col gap-3 h-[320px] lg:h-full flex-shrink-0">
               <div className="flex-1 rounded-xl bg-black overflow-hidden flex items-center justify-center relative">
                 {selectedFrame?.dataUrl
                   ? <img src={selectedFrame.dataUrl} alt="" className="max-w-full max-h-full object-contain" />
@@ -413,7 +413,7 @@ function FrameViewer({ videoData }) {
                   className="btn-secondary text-xs py-1.5 px-3 disabled:opacity-30">Next →</button>
               </div>
             </div>
-            <div className="w-1/2 flex flex-col">
+            <div className="w-full lg:w-1/2 flex flex-col h-[320px] lg:h-full">
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
                 <span className="text-xs text-gray-400">JSON · Frame #{selectedIdx + 1}</span>
                 <button onClick={() => copyFrame(selectedIdx)} className="text-xs text-gray-500 hover:text-white flex items-center gap-1">
@@ -432,7 +432,7 @@ function FrameViewer({ videoData }) {
 
         {viewMode === 'grid' && (
           <div className="h-full overflow-auto p-6">
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {frames.map((frame, i) => {
                 const r = frameResults[i]
                 const c = r ? Object.fromEntries(Object.entries(r).filter(([k]) => !k.startsWith('_'))) : null

@@ -22,7 +22,7 @@ const Navbar = ({ onEnterApp }) => {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'py-3 backdrop-blur-xl bg-black/40 border-b border-white/5' : 'py-5'
+        scrolled || menuOpen ? 'py-3 backdrop-blur-xl bg-black/80 border-b border-white/5' : 'py-5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">

@@ -141,7 +141,7 @@ export default function ExportsSection() {
         {/* Export options */}
         <div className="glass-card p-5 mb-6 rounded-xl">
           <h3 className="text-white font-semibold mb-4">Export Options</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { id: 'opt-schema', label: 'Include schema', desc: 'Attach JSON Schema to export', default: true },
               { id: 'opt-meta', label: 'Include metadata', desc: 'Page numbers, confidence scores', default: true },

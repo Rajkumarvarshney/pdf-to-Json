@@ -22,7 +22,7 @@ const Navbar = ({ onEnterApp }) => {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'py-3 backdrop-blur-xl bg-black/40 border-b border-white/5' : 'py-5'
+        scrolled || menuOpen ? 'py-3 backdrop-blur-xl bg-black/80 border-b border-white/5' : 'py-5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -213,29 +213,31 @@ try {
           
           {/* Sidebar */}
           <aside className="w-full lg:w-64 shrink-0">
-            <div className="lg:sticky lg:top-24 space-y-1">
-              <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+            <div className="lg:sticky lg:top-24 flex flex-col">
+              <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 hidden lg:block">
                 Developer Guide
               </div>
-              {sidebarItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      activeTab === item.id
-                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/10 border border-indigo-500/30'
-                        : 'text-gray-400 hover:text-white hover:bg-white/[0.03] border border-transparent'
-                    }`}
-                  >
-                    <Icon size={16} />
-                    <span>{item.label}</span>
-                  </button>
-                )
-              })}
-              <hr className="border-white/5 my-6" />
-              <div className="glass-card p-4 border-white/5 space-y-3">
+              <div className="flex flex-row overflow-x-auto lg:flex-col gap-1 pb-3 lg:pb-0 scrollbar-none whitespace-nowrap">
+                {sidebarItems.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex-shrink-0 lg:w-full ${
+                        activeTab === item.id
+                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/10 border border-indigo-500/30'
+                          : 'text-gray-400 hover:text-white hover:bg-white/[0.03] border border-transparent'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              <hr className="border-white/5 my-6 hidden lg:block" />
+              <div className="glass-card p-4 border-white/5 space-y-3 hidden lg:block">
                 <div className="text-xs font-semibold text-white flex items-center gap-1.5">
                   <Key size={12} className="text-yellow-500" />
                   <span>API Status</span>

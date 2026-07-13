@@ -381,8 +381,8 @@ const QuestionCard = ({ question, pageImages }) => {
 
   return (
     <div className="bg-black/20 border border-white/5 rounded-xl p-5 hover:border-white/10 transition-all flex flex-col gap-4">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-sm">
             Q{question.question_number}
           </span>
@@ -717,7 +717,7 @@ export default function DocumentViewer({ docData }) {
         className="flex flex-col h-full w-full gap-4 p-4 overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between flex-shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
           <div>
             <h2 className="text-xl font-black text-white truncate max-w-lg">{docData?.name || 'document.pdf'}</h2>
             <div className="flex items-center gap-3 text-sm text-gray-400 mt-1 flex-wrap">
@@ -730,7 +730,7 @@ export default function DocumentViewer({ docData }) {
               {docData?.size && <span>{docData.size}</span>}
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-end flex-shrink-0">
             <button
               onClick={() => {
                 setChatOpen(prev => {

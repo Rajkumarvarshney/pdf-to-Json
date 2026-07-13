@@ -3,12 +3,12 @@ import { motion } from 'framer-motion'
 import { Settings, User, Key, Bell, Shield, Palette, Code2, Save, Eye, EyeOff } from 'lucide-react'
 
 const SettingRow = ({ label, description, children }) => (
-  <div className="flex items-center justify-between py-4 border-b border-white/5 last:border-0">
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-b border-white/5 last:border-0 gap-3">
     <div>
       <div className="text-sm text-white font-medium">{label}</div>
       {description && <div className="text-xs text-gray-500 mt-0.5">{description}</div>}
     </div>
-    <div className="ml-8">{children}</div>
+    <div className="w-full sm:w-auto flex justify-end flex-shrink-0">{children}</div>
   </div>
 )
 
@@ -78,7 +78,7 @@ export default function SettingsSection() {
             </div>
             <button className="btn-secondary text-sm">Change Avatar</button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { id: 'setting-name', label: 'Full Name', defaultValue: 'John Doe' },
               { id: 'setting-email', label: 'Email', defaultValue: 'john@example.com' },
@@ -101,15 +101,15 @@ export default function SettingsSection() {
         {/* API Configuration */}
         <Section title="API Configuration" icon={Key}>
           <SettingRow label="Groq API Key" description="Used for AI extraction and schema generation">
-            <div className="flex items-center gap-2">
-              <div className="relative">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="relative flex-1 sm:flex-none">
                 <input
                   id="setting-api-key"
                   type={apiKeyVisible ? 'text' : 'password'}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="gsk_..."
-                  className="bg-white/5 border border-white/8 rounded-lg pl-3 pr-10 py-2 text-white text-sm w-64 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="bg-white/5 border border-white/8 rounded-lg pl-3 pr-10 py-2 text-white text-sm w-full sm:w-64 focus:outline-none focus:border-indigo-500 font-mono"
                 />
                 <button
                   onClick={() => setApiKeyVisible(!apiKeyVisible)}

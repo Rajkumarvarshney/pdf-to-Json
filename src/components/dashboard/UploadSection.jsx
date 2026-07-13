@@ -237,7 +237,7 @@ export default function UploadSection({ onDocumentReady }) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-6">
+    <div className="max-w-3xl mx-auto py-8 px-6 overflow-y-auto h-full">
       {/* API Key Modal */}
       {showApiKeyModal && (
         <ApiKeyModal onKeySet={handleApiKeySet} />
@@ -323,7 +323,7 @@ export default function UploadSection({ onDocumentReady }) {
             <div className="flex items-center justify-between p-3.5 bg-[#14141f] border border-white/5 rounded-xl mb-4 text-xs">
               <div className="flex items-center gap-3">
                 <FileText size={16} className="text-indigo-400" />
-                <span className="font-bold text-white">{uploadedFile?.name}</span>
+                <span className="font-bold text-white truncate max-w-[150px] sm:max-w-xs" title={uploadedFile?.name}>{uploadedFile?.name}</span>
                 <span className="text-gray-500">({uploadedFile?.size ? `${Math.round(uploadedFile.size / 1024)} KB` : ''})</span>
               </div>
               <button 
@@ -369,7 +369,7 @@ export default function UploadSection({ onDocumentReady }) {
             <div
               {...getRootProps()}
               id="pdf-dropzone"
-              className={`relative border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 ${
+              className={`relative border-2 border-dashed rounded-2xl p-8 sm:p-16 text-center cursor-pointer transition-all duration-300 ${
                 isDragActive
                   ? 'border-indigo-500 bg-indigo-500/5 scale-[1.01]'
                   : 'border-white/10 hover:border-indigo-500/50 hover:bg-white/2'

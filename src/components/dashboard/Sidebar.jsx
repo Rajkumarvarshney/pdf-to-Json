@@ -21,6 +21,7 @@ export default function Sidebar({ activeSection, setActiveSection, onBack, stats
     <motion.aside
       initial={{ x: -280 }}
       animate={{ x: 0 }}
+      exit={{ x: -280 }}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
       className={`w-64 flex-shrink-0 h-screen flex flex-col ${className}`}
       style={{
