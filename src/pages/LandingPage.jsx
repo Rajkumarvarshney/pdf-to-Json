@@ -608,7 +608,6 @@ const CTASection = ({ onEnterApp }) => (
         className="gradient-border"
       >
         <div className="glass-card p-6 sm:p-16">
-          <div className="text-6xl mb-6">🚀</div>
           <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
             Start Parsing PDFs <span className="gradient-text">Today</span>
           </h2>
