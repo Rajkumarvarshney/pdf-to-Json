@@ -70,6 +70,7 @@ export default function SchemaBuilder({
   onExtract
 }) {
   const [activePreviewTab, setActivePreviewTab] = useState('schema') // 'schema' | 'prompt'
+  const [activeMobileTab, setActiveMobileTab] = useState('editor') // 'editor' | 'preview'
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [jsonSampleText, setJsonSampleText] = useState('')
   const [jsonError, setJsonError] = useState('')
@@ -268,8 +269,34 @@ Return ONLY the JSON object. No explanation, no markdown fences.`
             )}
           </AnimatePresence>
 
+          {/* Mobile Tab Switcher */}
+          <div className="flex md:hidden border-b border-white/5 bg-black/25 flex-shrink-0 w-full">
+            <button
+              onClick={() => setActiveMobileTab('editor')}
+              className={`flex-1 py-2.5 text-center text-xs font-bold transition-all border-b-2 ${
+                activeMobileTab === 'editor'
+                  ? 'border-indigo-500 text-white bg-white/2'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Fields Editor
+            </button>
+            <button
+              onClick={() => setActiveMobileTab('preview')}
+              className={`flex-1 py-2.5 text-center text-xs font-bold transition-all border-b-2 ${
+                activeMobileTab === 'preview'
+                  ? 'border-indigo-500 text-white bg-white/2'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Schema Preview
+            </button>
+          </div>
+
           {/* Left: Fields Editor Workspace */}
-          <div className="flex-1 flex flex-col min-w-0 border-r border-white/5 bg-[#0d0d14]">
+          <div className={`flex-1 flex-col min-w-0 border-r border-white/5 bg-[#0d0d14] ${
+            activeMobileTab === 'editor' ? 'flex' : 'hidden md:flex'
+          }`}>
             {/* Toolbar */}
             <div className="p-3 border-b border-white/5 flex flex-wrap gap-2 items-center bg-black/20">
               <button
@@ -407,7 +434,9 @@ Return ONLY the JSON object. No explanation, no markdown fences.`
           </div>
 
           {/* Right: Live Preview Panel (280px) */}
-          <div className="w-full md:w-[280px] bg-[#08080c] flex flex-col flex-shrink-0">
+          <div className={`w-full md:w-[280px] bg-[#08080c] flex-col flex-shrink-0 ${
+            activeMobileTab === 'preview' ? 'flex' : 'hidden md:flex'
+          }`}>
             {/* Tab switchers */}
             <div className="flex border-b border-white/5 bg-black/25">
               <button

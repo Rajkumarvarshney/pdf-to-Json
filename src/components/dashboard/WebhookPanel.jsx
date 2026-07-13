@@ -255,7 +255,7 @@ export default function WebhookPanel({ extractedJson, metadata }) {
         
         {/* Presets and Webhook Form Box */}
         <div className="glass-card p-5 rounded-2xl border border-white/5 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <h3 className="text-white font-bold text-sm flex items-center gap-2">
               <Zap size={16} className="text-indigo-400" />
               <span>Send to webhook</span>

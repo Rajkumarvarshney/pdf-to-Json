@@ -460,7 +460,7 @@ export default function PricingPage({ onEnterApp }) {
 
               <hr className="border-white/5 my-4" />
 
-              <div className="flex justify-between items-end">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-4">
                 <div>
                   <span className="text-gray-500 text-xs block mb-1">Estimated total price</span>
                   {typeof result.cost === 'number' ? (
@@ -472,18 +472,18 @@ export default function PricingPage({ onEnterApp }) {
                     <span className="text-4xl font-black text-white">Custom SLA</span>
                   )}
                 </div>
-                <div>
+                <div className="w-full sm:w-auto">
                   {typeof result.cost === 'number' ? (
                     <button
                       onClick={onEnterApp}
-                      className="btn-primary flex items-center gap-2 px-6 py-3 text-sm font-semibold"
+                      className="btn-primary flex items-center gap-2 px-6 py-3 text-sm font-semibold w-full sm:w-auto justify-center"
                     >
                       Choose Plan <ArrowRight size={14} />
                     </button>
                   ) : (
                     <a
                       href="mailto:sales@docparse.ai?subject=Enterprise Query"
-                      className="btn-secondary flex items-center gap-2 px-6 py-3 text-sm font-semibold text-center"
+                      className="btn-secondary flex items-center gap-2 px-6 py-3 text-sm font-semibold text-center w-full sm:w-auto justify-center"
                     >
                       Contact Sales <ArrowRight size={14} />
                     </a>
