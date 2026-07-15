@@ -710,11 +710,11 @@ export default function DocumentViewer({ docData }) {
   const badgeStyle = fileTypeBadges[fileType] || fileTypeBadges.pdf
 
   return (
-    <div className="relative flex h-full w-full overflow-hidden">
+    <div className="relative flex flex-col h-full w-full overflow-y-auto lg:overflow-hidden">
       <motion.div
         animate={{ marginRight: chatOpen && !isMobile ? '376px' : '0px' }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="flex flex-col h-full w-full gap-4 p-4 overflow-y-auto lg:overflow-hidden"
+        className="flex flex-col h-auto lg:h-full w-full gap-4 p-4 lg:overflow-hidden"
       >
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
