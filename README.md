@@ -6,12 +6,12 @@ Built with a sleek, dark-mode glassmorphic UI, the app processes everything in t
 
 ---
 
-## 🚀 Live Demo & Hosting
+## Live Demo & Hosting
 This project is built as a **static frontend application** and is ready to be hosted for free on platforms like **Render**, **Vercel**, or **Netlify**.
 
 ---
 
-## ✨ Core Features
+## Core Features
 
 ### 1. Document to JSON (PDF Extractor)
 * **General Document Mode**: Automatically infers the document type (e.g. resumes, invoices, contracts, research papers) and auto-generates a custom JSON Schema to extract the fields.
@@ -37,7 +37,7 @@ This project is built as a **static frontend application** and is ready to be ho
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 * **Framework**: React 18, Vite (Fast HMR)
 * **Styling**: Tailwind CSS, Framer Motion (micro-animations), Lucide Icons
 * **PDF Core**: PDF.js (In-browser canvas parsing & image extraction)
@@ -75,7 +75,7 @@ Open `http://localhost:5174` in your browser.
 
 ---
 
-## ☁️ Deploying on Render (Free Static Site)
+## Deploying on Render (Free Static Site)
 
 1. Connect your GitHub repository to [Render](https://dashboard.render.com/).
 2. Create a new **Static Site**.
@@ -86,5 +86,5 @@ Open `http://localhost:5174` in your browser.
 
 ---
 
-## 📜 License
+## License
 Distributed under the MIT License. See `LICENSE` for more information.
